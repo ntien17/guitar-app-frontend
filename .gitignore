@@ -36,3 +36,6 @@ tmp/
 
 # OS
 Thumbs.db
+
+# History
+.history/

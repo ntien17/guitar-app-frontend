@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase"
-import { AuthError, Session, User } from "@supabase/supabase-js"
+import type {
+  AuthChangeEvent,
+  AuthError,
+  Session,
+  User,
+} from "@supabase/supabase-js"
 
 export interface SignUpData {
   email: string
@@ -18,130 +23,134 @@ export interface AuthResponse {
   error: AuthError | null
 }
 
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  fullName: string
+) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      },
+      emailRedirectTo: `${window.location.origin}/login`,
+    },
+  })
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  return supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+}
+
+export async function signInWithGoogle() {
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/`,
+    },
+  })
+}
+
+export async function signOut() {
+  return supabase.auth.signOut()
+}
+
+export async function getCurrentUser() {
+  return supabase.auth.getUser()
+}
+
+export async function getSession() {
+  return supabase.auth.getSession()
+}
+
+export function onAuthStateChange(
+  callback: (
+    event: AuthChangeEvent,
+    session: Session | null
+  ) => void | Promise<void>
+) {
+  return supabase.auth.onAuthStateChange(callback)
+}
+
+export async function getProfile(userId: string) {
+  return supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single()
+}
+
+export function getErrorMessage(error: AuthError | null): string {
+  if (!error) return ""
+
+  const errorMessages: Record<string, string> = {
+    "User already registered": "Email này đã được đăng ký rồi",
+    "Invalid login credentials": "Email hoặc mật khẩu không đúng",
+    "Email not confirmed": "Vui lòng xác nhận email của bạn",
+    "Password should be at least 6 characters":
+      "Mật khẩu phải có ít nhất 6 ký tự",
+    "Invalid email": "Email không hợp lệ",
+  }
+
+  return errorMessages[error.message] || error.message || "Có lỗi xảy ra"
+}
+
+/**
+ * Giữ object authService để nếu file cũ nào còn gọi authService.xxx
+ * thì vẫn không bị hỏng.
+ */
 export const authService = {
-  // Sign up with email and password
-  async signUpWithEmail({ email, password, fullName }: SignUpData): Promise<AuthResponse> {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      })
+  signUpWithEmail: async ({ email, password, fullName }: SignUpData) => {
+    const { data, error } = await signUpWithEmail(email, password, fullName)
 
-      return {
-        user: data.user,
-        session: data.session,
-        error,
-      }
-    } catch (error) {
-      return {
-        user: null,
-        session: null,
-        error: error as AuthError,
-      }
+    return {
+      user: data.user,
+      session: data.session,
+      error,
     }
   },
 
-  // Sign in with email and password
-  async signInWithEmail({ email, password }: SignInData): Promise<AuthResponse> {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+  signInWithEmail: async ({ email, password }: SignInData) => {
+    const { data, error } = await signInWithEmail(email, password)
 
-      return {
-        user: data.user,
-        session: data.session,
-        error,
-      }
-    } catch (error) {
-      return {
-        user: null,
-        session: null,
-        error: error as AuthError,
-      }
+    return {
+      user: data.user,
+      session: data.session,
+      error,
     }
   },
 
-  // Sign in with Google
-  async signInWithGoogle(): Promise<{ error: AuthError | null }> {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
+  signInWithGoogle,
 
-      return { error }
-    } catch (error) {
-      return { error: error as AuthError }
-    }
+  signOut,
+
+  getCurrentUser: async () => {
+    const { data, error } = await getCurrentUser()
+    if (error) return null
+    return data.user
   },
 
-  // Sign out
-  async signOut(): Promise<{ error: AuthError | null }> {
-    try {
-      const { error } = await supabase.auth.signOut()
-      return { error }
-    } catch (error) {
-      return { error: error as AuthError }
-    }
+  getSession: async () => {
+    const { data, error } = await getSession()
+    if (error) return null
+    return data.session
   },
 
-  // Get current user
-  async getCurrentUser(): Promise<User | null> {
-    try {
-      const { data, error } = await supabase.auth.getUser()
-      if (error) return null
-      return data.user
-    } catch {
-      return null
-    }
-  },
-
-  // Get current session
-  async getSession(): Promise<Session | null> {
-    try {
-      const { data, error } = await supabase.auth.getSession()
-      if (error) return null
-      return data.session
-    } catch {
-      return null
-    }
-  },
-
-  // Listen to auth state changes
-  onAuthStateChange(
+  onAuthStateChange: (
     callback: (user: User | null, session: Session | null) => void
-  ) {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+  ) => {
+    const { data } = onAuthStateChange((_event, session) => {
       const user = session?.user ?? null
       callback(user, session)
     })
 
-    return subscription
+    return data.subscription
   },
 
-  // Get error message in Vietnamese
-  getErrorMessage(error: AuthError | null): string {
-    if (!error) return ""
-
-    const errorMessages: Record<string, string> = {
-      "User already registered": "Email này đã được đăng ký rồi",
-      "Invalid login credentials": "Email hoặc mật khẩu không đúng",
-      "Email not confirmed": "Vui lòng xác nhận email của bạn",
-      "Password should be at least 6 characters": "Mật khẩu phải có ít nhất 6 ký tự",
-      "Invalid email": "Email không hợp lệ",
-    }
-
-    return errorMessages[error.message] || error.message || "Có lỗi xảy ra"
-  },
+  getErrorMessage,
 }

@@ -154,11 +154,11 @@ export default function MediaPlayer({
 
   if (!src) {
     return (
-      <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 text-slate-300">
-        <h3 className="text-lg font-semibold text-white">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-slate-600">
+        <h3 className="text-lg font-semibold text-slate-900">
           {title || "Media bài học"}
         </h3>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-600">
           Bài học này chưa có video hoặc audio.
         </p>
       </div>
@@ -166,8 +166,8 @@ export default function MediaPlayer({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
-      {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6">
+      {title && <h3 className="text-lg font-semibold text-slate-900">{title}</h3>}
 
       {type === "video" ? (
         <video
@@ -198,14 +198,14 @@ export default function MediaPlayer({
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <div className="relative h-2 overflow-hidden rounded-full bg-slate-800">
+          <div className="relative h-2 overflow-hidden rounded-full bg-slate-200">
             <div
-              className="absolute h-full rounded-full bg-slate-600"
+              className="absolute h-full rounded-full bg-slate-300"
               style={{ width: `${bufferedPercent}%` }}
             />
 
             <div
-              className="pointer-events-none absolute h-full rounded-full bg-blue-500 transition-all"
+              className="pointer-events-none absolute h-full rounded-full bg-blue-600 transition-all"
               style={{ width: `${progressPercent}%` }}
             />
 
@@ -220,7 +220,7 @@ export default function MediaPlayer({
             />
           </div>
 
-          <div className="flex justify-between text-xs text-slate-400">
+          <div className="flex justify-between text-xs text-slate-600">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
@@ -230,13 +230,13 @@ export default function MediaPlayer({
           <button
             type="button"
             onClick={handlePlayPause}
-            className="flex-shrink-0 rounded-full bg-blue-600 p-2 transition-colors hover:bg-blue-500"
+            className="flex-shrink-0 rounded-full bg-blue-600 text-white p-2 transition-colors hover:bg-blue-700"
             title={isPlaying ? "Tạm dừng" : "Phát"}
           >
             {isPlaying ? (
-              <Pause size={20} className="text-white" />
+              <Pause size={20} />
             ) : (
-              <Play size={20} className="text-white" />
+              <Play size={20} />
             )}
           </button>
 
@@ -246,13 +246,13 @@ export default function MediaPlayer({
             <button
               type="button"
               onClick={handleMuteToggle}
-              className="rounded p-1 transition-colors hover:bg-slate-800"
+              className="rounded p-1 transition-colors hover:bg-slate-100"
               title={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
             >
               {isMuted || volume === 0 ? (
-                <VolumeX size={18} className="text-slate-300" />
+                <VolumeX size={18} className="text-slate-600" />
               ) : (
-                <Volume2 size={18} className="text-slate-300" />
+                <Volume2 size={18} className="text-slate-600" />
               )}
             </button>
 
